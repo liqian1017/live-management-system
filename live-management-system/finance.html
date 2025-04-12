@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>直播财务系统-修正版</title>
+    <style>
+        /* 样式保持不变 */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .calculator {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .input-group {
+            margin: 15px 0;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        input, button, select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            min-width: 200px;
+        }
+        button {
+            background: #1677ff;
+            color: white;
+            cursor: pointer;
+        }
+        .history-table {
+            margin-top: 30px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        .delete-btn {
+            color: red;
+            cursor: pointer;
+        }
+        .export-btn {
+            background: #28a745;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML结构保持不变 -->
+    <div class="calculator">
+        <h2>直播财务计算</h2>
+        <div class="input-group">
+            <input type="date" id="recordDate" value="">
+            <input type="number" id="shipNum" placeholder="发货单数">
+            <input type="number" id="returnRate" placeholder="退货率" step="0.01">
+        </div>
+        <div class="input-group">
+            <input type="number" id="unitPrice" placeholder="客单价（元）">
+            <input type="number" id="shipCost" placeholder="发货成本/单">
+            <input type="number" id="returnFreight" placeholder="退货运费/单">
+        </div>
+        <button onclick="calculate()">计算并保存</button>
+        <button onclick="exportData()" class="export-btn">导出数据</button>
+    </div>
+
+    <div class="history-table">
+        <h3>历史记录</h3>
+        <div class="input-group">
+            <input type="date" id="filterDate">
+            <button onclick="loadHistory()">筛选</button>
+            <button onclick="clearAll()" style="background:#dc3545">清空数据</button>
+        </div>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>发货单数</th>
+                    <th>退货率</th>
+                    <th>客单价</th>
+                    <th>发货成本</th>
+                    <th>退货运费</th>
+                    <th>净收入</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="dataBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // 初始化存储 
+        let records = JSON.parse(localStorage.getItem('financeRecords'))  || [];
+
+        // 设置默认日期为今日 
+        document.getElementById('recordDate').valueAsDate  = new Date();
+
+        // 修改的核心计算逻辑
+        function calculate() {
+            // 获取输入值 
+            const recordDate = document.getElementById('recordDate').value; 
+            const shipNum = parseFloat(document.getElementById('shipNum').value)  || 0;
+            const returnRate = parseFloat(document.getElementById('returnRate').value)  || 0;
+            const unitPrice = parseFloat(document.getElementById('unitPrice').value)  || 0;
+            const shipCost = parseFloat(document.getElementById('shipCost').value)  || 0;
+            const returnFreight = parseFloat(document.getElementById('returnFreight').value)  || 0;
+
+            // 执行正确计算 
+            const returnNum = Math.round(shipNum * returnRate);
+            const successNum = shipNum - returnNum;
+            
+            // 关键修改点：发货成本仅计算成功订单
+            const grossSales = successNum * unitPrice;
+            const totalCost = (successNum * shipCost) + (returnNum * returnFreight); // 修正行
+            const netIncome = grossSales - totalCost;
+
+            // 创建记录 
+            const record = {
+                date: recordDate,
+                shipNum: shipNum,
+                returnRate: returnRate,
+                unitPrice: unitPrice,
+                shipCost: shipCost,
+                returnFreight: returnFreight,
+                netIncome: netIncome.toFixed(2) 
+            };
+
+            // 保存记录 
+            records.push(record); 
+            localStorage.setItem('financeRecords',  JSON.stringify(records)); 
+            alert('记录保存成功！');
+            loadHistory();
+        }
+
+        // 以下函数保持不变
+        function loadHistory() {
+            const filterDate = document.getElementById('filterDate').value; 
+            const filtered = filterDate 
+                ? records.filter(r  => r.date  === filterDate) 
+                : records;
+
+            const tbody = document.getElementById('dataBody'); 
+            tbody.innerHTML  = filtered.map((record,  index) => `
+                <tr>
+                    <td>${record.date}</td> 
+                    <td>${record.shipNum}</td> 
+                    <td>${(record.returnRate  * 100).toFixed(1)}%</td>
+                    <td>${record.unitPrice}</td> 
+                    <td>${record.shipCost}</td> 
+                    <td>${record.returnFreight}</td> 
+                    <td>${record.netIncome}</td> 
+                    <td class="delete-btn" onclick="deleteRecord(${index})">删除</td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteRecord(index) {
+            if(confirm('确定要删除这条记录吗？')) {
+                records.splice(index,  1);
+                localStorage.setItem('financeRecords',  JSON.stringify(records)); 
+                loadHistory();
+            }
+        }
+
+        function clearAll() {
+            if(confirm('确定要清空所有数据吗？此操作不可恢复！')) {
+                localStorage.removeItem('financeRecords'); 
+                records = [];
+                loadHistory();
+            }
+        }
+
+        function exportData() {
+            const csvContent = [
+                ['日期', '发货数', '退货率', '客单价', '发货成本', '退货运费', '净收入'].join(','),
+                ...records.map(r  => [
+                    r.date, 
+                    r.shipNum, 
+                    r.returnRate, 
+                    r.unitPrice, 
+                    r.shipCost, 
+                    r.returnFreight, 
+                    r.netIncome  
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob); 
+            const a = document.createElement('a'); 
+            a.href  = url;
+            a.download  = `直播数据_${new Date().toLocaleDateString()}.csv`;
+            a.click(); 
+        }
+
+        // 初始化加载数据 
+        loadHistory();
+    </script>
+</body>
+</html>
