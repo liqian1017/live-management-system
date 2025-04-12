@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>直播运营管理系统</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .portal-container {
+            text-align: center;
+            background: white;
+            padding: 40px 60px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #1a1a1a;
+            margin-bottom: 40px;
+            font-size: 28px;
+        }
+        .system-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+        }
+        .system-card {
+            background: #ffffff;
+            border: 1px solid #e8e8e8;
+            border-radius: 12px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 220px;
+        }
+        .system-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            border-color: #1677ff;
+        }
+        .system-card h2 {
+            color: #1677ff;
+            margin: 20px 0 10px;
+            font-size: 20px;
+        }
+        .system-card p {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .icon {
+            font-size: 40px;
+            color: #1677ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <h1>直播运营管理系统</h1>
+        <div class="system-cards">
+            <div class="system-card" onclick="location.href='finance.html'">
+                <div class="icon">💰</div>
+                <h2>直播财务系统</h2>
+                <p>发货成本计算｜退货率统计｜数据可视化分析</p>
+            </div>
+            
+            <div class="system-card" onclick="location.href='expense.html'">
+                <div class="icon">📊</div>
+                <h2>运营支出系统</h2>
+                <p>日常支出管理｜费用分类统计｜多维度报表生成</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
